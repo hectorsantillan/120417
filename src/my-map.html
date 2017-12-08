@@ -1,0 +1,321 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/google-map/google-map.html">
+<link rel="import" href="../bower_components/google-map/google-map-poly.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="my-icons.html">
+
+
+<dom-module id="my-map">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+      }
+
+      paper-toast {
+        float: right;
+      }
+
+      @media (max-width: 767px) {
+        iron-image.logo {
+          width: 64px;
+          height: 64px;
+        }
+
+        div.legendHeader {
+          display: none;
+        }
+
+        div.myLegend {
+          position: absolute;
+          margin: 11px;
+          bottom: 70px;
+          background: white;
+          height: 250px;
+          width: 16px;
+          opacity: 0.5;
+          padding: 10px;
+        }
+
+        div.displayBig {
+          display: none;
+        }
+
+      }
+
+      @media (min-width: 767px) {
+        iron-image.logo {
+          width: 128px;
+          height: 128px;
+        }
+
+        div.legendHeaderSmall {
+          display: none;
+        }
+
+        div.myLegend {
+          position: absolute;
+          margin: 11px;
+          bottom: 70px;
+          background: white;
+          height: 250px;
+          width: 200px;
+          opacity: 0.5;
+          padding: 10px;
+        }
+
+        div.displaySmall {
+          display: none;
+        }
+
+      }
+
+
+      div.logo {
+        padding: 16px;
+        position: absolute;
+        float: left;
+      }
+
+      .myToolbar {
+        margin: 16px;
+        margin-right: 32px;
+        position: absolute;
+        float: right;
+        right: 0px;
+        background: white;
+        height: 32px;
+        font-size: 12px;
+        font-weight: 400;
+        background: green;
+        color: white;
+        width: 80px;
+      }
+
+      .myToolbar_refresh {
+        margin-top: 12px;
+        margin-right: 32px;
+        position: absolute;
+        float: right;
+        right: 100px;
+        color: green;
+      }
+
+      .myViewMap {
+        width: 250px;
+        height: 64px;
+        background-color: red;
+        color: white;
+
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        margin: auto;
+
+        max-width: 100%;
+        max-height: 100%;
+        overflow: auto;
+      }
+    </style>
+
+    <app-header-layout fullbleed has-scrolling-region>
+
+      <template is="dom-if" if="{{_viewMap('false',viewMap)}}">
+        <iron-image class="logo" placeholder="images/manifest/map-ph.png" data-src="images/manifest/map-ph.png" sizing="cover"
+          preload fade  style="width:100%; height:100%;"></iron-image>
+      </template>
+
+      <template is="dom-if" if="{{_viewMap('true',viewMap)}}">
+        <firebase-query id="query" path="/blocks" data="{{blocks}}">
+        </firebase-query>
+
+        <firebase-query id="query" path="/lots" data="{{lots}}">
+        </firebase-query>
+
+        <google-map latitude="10.3006632" longitude="123.99903661" zoom="18" api-key="AIzaSyCT4PT1u_Yia3SLTiCj6XMoq0xZFGMfVWY" no-auto-tilt="true"
+          fit-to-markers disable-street-view-control="true" additional-map-options='{"mapTypeControlOptions": {"position": 6},"fullscreenControl": false}'>
+          <template is="dom-repeat" items="{{blocks}}" as='block'>
+            <google-map-poly closed stroke-weight="0" fill-color="#cbe6a3" fill-opacity="1" id="{{block.$key}}">
+              <template is="dom-repeat" items="{{block.map_points}}" as='point'>
+                <google-map-point longitude="{{point.longitude}}" latitude="{{point.latitude}}"></google-map-point>
+              </template>
+            </google-map-poly>
+          </template>
+
+          <template is="dom-repeat" items="{{lots}}" as='lot'>
+            <google-map-poly closed stroke-color="white" stroke-position="inside" stroke-opacity="1" stroke-weight="1" fill-color="{{lot.color}}"
+              fill-opacity="1" clickable="true" click-events="true" on-google-map-poly-click="polyClicked" mouse-events="true"
+              on-google-map-poly-mouseover="polyMouseOver" on-google-map-poly-mouseout="polyMouseOut" id="{{lot.$key}}">
+
+              <template is="dom-repeat" items="{{lot.map_points}}" as='point'>
+                <google-map-point longitude="{{point.longitude}}" latitude="{{point.latitude}}"></google-map-point>
+              </template>
+
+            </google-map-poly>
+          </template>
+
+        </google-map>
+
+
+        <div class="myLegend">
+          <div class="legendHeader">
+            <span>Legend:</span>
+            </br>
+            <span>---------------------------------------------</span>
+          </div>
+
+          <div class="legendHeaderSmall">
+            <span>L</span>
+            </br>
+            <span>---</span>
+          </div>
+
+          <div style="display:flex;align-items:center;">
+            <div style="display: inline-block; height: 16px; width: 16px; background: green;"></div>
+            <div class="displaySmall" style="margin-left: -13px;">A</div>
+            <div class="displayBig" style="margin-left: 8px;">
+              <span>Available</span>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;">
+            <div style="display: inline-block; height: 16px; width: 16px; background: red;"></div>
+            <div class="displaySmall" style="margin-left: -13px;">S</div>
+            <div class="displayBig" style="margin-left: 8px;">
+              <span>Sold</span>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;">
+            <div style="display: inline-block; height: 16px; width: 16px; background: yellow;"></div>
+            <div class="displaySmall" style="margin-left: -13px;">R</div>
+            <div class="displayBig" style="margin-left: 8px;">
+              <span>Reserved</span>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;">
+            <div style="display: inline-block; height: 16px; width: 16px; background: orange;"></div>
+            <div class="displaySmall" style="margin-left: -13px;">H</div>
+            <div class="displayBig" style="margin-left: 8px;">
+              <span>Hold</span>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;">
+            <div style="display: inline-block; height: 16px; width: 16px; background: pink;"></div>
+            <div class="displaySmall" style="margin-left: -13px;">P</div>
+            <div class="displayBig" style="margin-left: 8px;">
+              <span>Pending</span>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;">
+            <div style="display: inline-block; height: 16px; width: 16px; background: gray;"></div>
+            <div class="displaySmall" style="margin-left: -13px;">N</div>
+            <div class="displayBig" style="margin-left: 8px;">
+              <span>Not yet available</span>
+            </div>
+          </div>
+
+        </div>
+
+      </template>
+
+      <div class="logo">
+        <iron-image class="logo" placeholder="images/manifest/icon-48x48.png" data-src="images/manifest/icon-48x48.png" sizing="contain"
+          preload fade></iron-image>
+      </div>
+
+      <paper-icon-button class="myToolbar_refresh" icon="my-icons:refresh" on-tap="_refreshMap"></paper-icon-button>
+      <paper-button class="myToolbar" raised>Sign In</paper-button>
+      
+      <paper-button class="myViewMap" id="myViewMap" raised on-click="_showMap">
+        <iron-icon icon="my-icons:map" style="padding-right: 8px;"></iron-icon>
+        <span>VIEW MAP</span>
+      </paper-button>
+
+
+    </app-header-layout>
+
+  </template>
+
+  <script>
+    Polymer({
+      is: 'my-map',
+
+      properties: {
+        blocks: {
+          type: Object
+        },
+        lots: {
+          type: Object
+        },
+        viewMap: {
+          type: Boolean,
+          value: false
+        }
+
+      },
+
+      polyClicked(e) {
+        var data_args = Polymer.dom(e).rootTarget.getAttribute("id");
+        var args = Polymer.dom(this.root).querySelector("#rightdrawer")
+
+        args.setAttribute("style", "display: block;");
+        args.setAttribute("uid", data_args);
+
+
+        // Polymer.dom(this.root).querySelector("#my-map-main-adl").setAttribute("style", "width: calc(100% - 340px);");
+
+      },
+
+      polyMouseOver(e) {
+        Polymer.dom(e).rootTarget.setAttribute("stroke-color", "black");
+      },
+
+      polyMouseOut(e) {
+        Polymer.dom(e).rootTarget.setAttribute("stroke-color", "white");
+      },
+
+      _viewMap(e, f) {
+        if (e === 'true') {
+          return f === true;
+        }
+        else {
+          return f === false;
+        }
+      },
+
+      _showMap() {
+        this.viewMap = true;
+
+        if (this.viewMap) {
+          var args = Polymer.dom(this.root).querySelector("#myViewMap")
+          args.setAttribute("style", "display: none;");
+        }
+        else {
+          var args = Polymer.dom(this.root).querySelector("#myViewMap")
+          args.setAttribute("style", "display: block;");
+        }
+      },
+
+      _refreshMap() {
+        window.location.reload()
+      }
+
+
+    })
+
+  </script>
+</dom-module>
