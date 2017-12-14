@@ -1,7 +1,10 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/iron-image/iron-image.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+
 
 <link rel="import" href="shared-styles.html">
 
@@ -10,7 +13,7 @@
     <style include="shared-styles">
             :host {
               display: block;
-              overflow: hidden;
+              /* overflow: hidden; */
           }
 
           @media (min-width: 767px) {
@@ -27,10 +30,10 @@
 
           @media (max-width: 767px) {
               :host {
-                  height: 100vh;
+                  height: 100%;
               }
               .main-container {
-                  height: 100vh;
+                  height: 100%;
                   background-color: white;
                   margin: 0 auto;
                   padding: 40px;
@@ -61,6 +64,8 @@
               font-weight: 400;
           }
     </style>
+    
+    <firebase-auth id="auth" user="{{user}}" provider="google" on-error="showError"></firebase-auth>
 
     <div class="main-container">
       <a href="/">
@@ -71,8 +76,9 @@
       <div>
         <div class="header">Create account</div>
         </br>
-        <paper-input label="Email" value="demo@abc.com"></paper-input>
-        <paper-input label="Password" type="password" value="demo@abc.com"></paper-input>
+        <paper-input label="Name" id="name"></paper-input>
+        <paper-input label="Email" id="email"></paper-input>
+        <paper-input label="Password" type="password" id="password"></paper-input>
         </br>
         </br>
         <div class="footer">
@@ -93,6 +99,9 @@
 
       _registerAccount(){
         // here 1am
+        this.$.auth.createUserWithEmailAndPassword('hbs.auss@gmail.com', '123456');
+
+        console.log('asd')
       }
     })
 

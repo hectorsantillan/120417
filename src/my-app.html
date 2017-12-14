@@ -23,10 +23,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="my-icons.html">
 <link rel="import" href="shared-styles.html">
 
-<link rel="import" href="my-landing-page.html">
+
+<link rel="lazy-import" href="my-landing-page.html">
+<link rel="lazy-import" href="my-map.html">
 <link rel="lazy-import" href="my-signin.html">
 <link rel="lazy-import" href="my-register-signin.html">
 <link rel="lazy-import" href="my-view1.html">
@@ -84,10 +87,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <firebase-app auth-domain="hpmg-56df3.firebaseapp.com" database-url="https://hpmg-56df3.firebaseio.com/" api-key="AIzaSyCKxkkMfRQlhG5vTWh8Y_1yNWtMCTa-YPM">
     </firebase-app>
 
+    <firebase-auth id="auth" user="{{user}}" provider="google" on-error="showError"></firebase-auth>
+    <!-- <div>Test</div> -->
 
     <template is="dom-if" if="{{_needToSignIn(userStore)}}">
       <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="view404" role="main">
-        <my-landing-page name="landing-page"></my-landing-page>
+        <my-landing-page name="landing-page" user="{{user}}"></my-landing-page>
         <my-signin name="signin"></my-signin>
         <my-register-signin name="register-signin"></my-register-signin>
         <my-view404 name="view404"></my-view404>
@@ -106,7 +111,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               <app-toolbar>
                 <iron-image class="avatar" sizing="contain" src=""></iron-image>
                 <div class="pad">
-                  <div class="primary">Mr. Marc Rizon</div>
+                  <div class="primary" on-tap="_signOut">[[user.email]]</div>
                   <div class="shortText">Sales Agent</div>
                   <div class="longText"></div>
                 </div>
@@ -187,7 +192,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           window.addEventListener('offline', (e) => this._notifyNetworkStatus(e));
         });
 
-        // alert(this.offline);
+        this.addEventListener('statusKnown', (e) => this._changeChannel(e));
       }
 
       _routePageChanged(page) {
@@ -243,17 +248,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           // alert(this.offline);
 
-          if (this.offline) {
-            this.$.toast.close();
-            this.$.toast.duration = 0;
-          }
-          else {
+          if (this.offline === false) {
             this.$.toast.close();
             this.$.toast.duration = 3000;
           }
+          else {
+            this.$.toast.close();
+            this.$.toast.duration = 0;
+          }
 
-          this.$.toast.show({ text: this.offline ? 'You are offline.' : 'You are online.' });
+          this.$.toast.show({ text: this.offline === false ? 'You are online.' : 'You are offline.' });
         }
+      }
+
+      _signOut() {
+        this.$.auth.signOut();
+      }
+
+      _changeChannel() {
+        this.userStore = this.user;
+        console.log(this.user)
       }
 
 

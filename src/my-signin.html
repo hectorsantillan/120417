@@ -1,4 +1,5 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-input/paper-input-container.html">
 <link rel="import" href="../bower_components/iron-image/iron-image.html">
@@ -9,12 +10,14 @@
 <link rel="import" href="shared-styles.html">
 <link rel="import" href="my-icons.html">
 
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+
 <dom-module id="my-signin">
     <template>
         <style include="shared-styles">
             :host {
                 display: block;
-                overflow: hidden;
+                /* overflow: hidden; */
             }
 
             @media (min-width: 767px) {
@@ -31,10 +34,10 @@
 
             @media (max-width: 767px) {
                 :host {
-                    height: 100vh;
+                    height: 100%;
                 }
                 .main-container {
-                    height: 100vh;
+                    height: 100%;
                     background-color: white;
                     margin: 0 auto;
                     padding: 40px;
@@ -71,11 +74,12 @@
             }
         </style>
 
+        <firebase-auth id="auth" user="{{user}}" provider="google" on-error="showError"></firebase-auth>
 
         <div class="main-container">
             <a href="/">
-                <iron-image placeholder="images/manifest/icon-512x512.png" data-src="images/manifest/icon-512x512.png" sizing="cover"
-                    preload fade style="width:128px; height:128px;"></iron-image>
+                <iron-image placeholder="images/manifest/icon-512x512.png" data-src="images/manifest/icon-512x512.png" sizing="cover" preload
+                    fade style="width:128px; height:128px;"></iron-image>
             </a>
             </br>
             <div>
@@ -91,13 +95,15 @@
                         <paper-menu-button>
                             <div slot="dropdown-trigger" alt="menu" style="color: royalblue;">More options</div>
                             <paper-listbox slot="dropdown-content">
-                                <a href="/register-signin"><paper-item noink>Create Account</paper-item></a>
+                                <a href="/register-signin">
+                                    <paper-item noink>Create Account</paper-item>
+                                </a>
                                 <paper-item>Forgot Password?</paper-item>
                             </paper-listbox>
                         </paper-menu-button>
                     </div>
                     <div class="action">
-                        <paper-button class="green">next</paper-button>
+                        <paper-button class="green" on-tap="_signIn">next</paper-button>
                     </div>
                 </div>
             </div>
@@ -108,7 +114,37 @@
 
     <script>
         Polymer({
-            is: 'my-signin'
+            is: 'my-signin',
+
+            _signIn() {
+                var actionCodeSettings = {
+                    url: 'https://www.example.com/cart?email=user@example.com&cartId=123',
+                    iOS: {
+                        bundleId: 'com.example.ios'
+                    },
+                    android: {
+                        packageName: 'com.example.android',
+                        installApp: true,
+                        minimumVersion: '12'
+                    },
+                    handleCodeInApp: true
+                };
+
+
+
+                this.$.auth.signInWithEmailAndPassword('hbs.auss@gmail.com', '123456');
+                // this.$.auth.sendEmailVerification(actionCodeSettings);
+                if (this.user) {
+                    if (this.user.emailVerified === false) {
+                        this.user.sendEmailVerification();
+                    }
+                }
+                
+                // console.log(this.user);
+                
+
+               
+            }
         })
 
     </script>

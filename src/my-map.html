@@ -9,9 +9,11 @@
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-query.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="shared-styles.html">
 <link rel="import" href="my-icons.html">
 
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
 
 <dom-module id="my-map">
   <template>
@@ -41,7 +43,7 @@
           background: white;
           height: 180px;
           width: 16px;
-          opacity: 0.5;
+          opacity: 1;
           padding: 10px;
         }
 
@@ -68,7 +70,7 @@
           background: white;
           height: 180px;
           width: 150px;
-          opacity: 0.5;
+          opacity: 1;
           padding: 10px;
         }
 
@@ -144,24 +146,37 @@
       </template>
 
       <template is="dom-if" if="{{_viewMap('true',viewMap)}}">
-        <firebase-query id="query" path="/blocks" data="{{blocks}}">
-        </firebase-query>
 
-        <firebase-query id="query" path="/lots" data="{{lots}}">
-        </firebase-query>
+        <paper-toast id="toast" text="Loading Map." duration=0 opened></paper-toast>
+
+        <firebase-document path="/statuscolor" data="{{statuscolor}}">
+        </firebase-document>
+
+        <!-- <firebase-query id="query" path="/blocks" data="{{blocks}}">
+        </firebase-query> -->
 
         <google-map latitude="10.3006632" longitude="123.99903661" zoom="18" api-key="AIzaSyCT4PT1u_Yia3SLTiCj6XMoq0xZFGMfVWY" no-auto-tilt="true"
           fit-to-markers disable-street-view-control="true" additional-map-options='{"mapTypeControlOptions": {"position": 6},"fullscreenControl": false}'>
           <template is="dom-repeat" items="{{blocks}}" as='block'>
-            <google-map-poly closed stroke-weight="0" fill-color="#cbe6a3" fill-opacity="1" id="{{block.$key}}">
+            <google-map-poly closed stroke-color="white" stroke-weight="1" stroke-opacity="1" fill-color="#cbe6a3" fill-opacity="1" id="{{block.$key}}"
+              clickable="true" click-events="true" on-google-map-poly-click="polyBlocksClicked" mouse-events="true" on-google-map-poly-mouseover="polyMouseOver"
+              on-google-map-poly-mouseout="polyMouseOut">
               <template is="dom-repeat" items="{{block.map_points}}" as='point'>
                 <google-map-point longitude="{{point.longitude}}" latitude="{{point.latitude}}"></google-map-point>
               </template>
             </google-map-poly>
           </template>
 
+
+          <firebase-query id="query" path="/lots" data="{{lots}}">
+          </firebase-query>
+
+          <firebase-document path="/statuscolor" data="{{statuscolor}}">
+          </firebase-document>
+
           <template is="dom-repeat" items="{{lots}}" as='lot'>
-            <google-map-poly closed stroke-color="white" stroke-position="inside" stroke-opacity="1" stroke-weight="1" fill-color="{{lot.color}}"
+
+            <google-map-poly closed stroke-color="white" stroke-position="inside" stroke-opacity="1" stroke-weight="1" fill-color="{{_computeVariableName(lot.status)}}"
               fill-opacity="1" clickable="true" click-events="true" on-google-map-poly-click="polyClicked" mouse-events="true"
               on-google-map-poly-mouseover="polyMouseOver" on-google-map-poly-mouseout="polyMouseOut" id="{{lot.$key}}">
 
@@ -171,6 +186,7 @@
 
             </google-map-poly>
           </template>
+
 
         </google-map>
 
@@ -189,40 +205,40 @@
           </div>
 
           <div style="display:flex;align-items:center;">
-            <div style="display: inline-block; height: 16px; width: 16px; background: green;"></div>
-            <div class="displaySmall" style="margin-left: -13px;">A</div>
+            <div style="display: inline-block; height: 16px; width: 16px;" data-args="available" id="legendAvailable"></div>
+            <div class="displaySmall" style="margin-left: -13px; color:darkgray;">A</div>
             <div class="displayBig" style="margin-left: 8px;">
               <span>Available</span>
             </div>
           </div>
 
           <div style="display:flex;align-items:center;">
-            <div style="display: inline-block; height: 16px; width: 16px; background: red;"></div>
-            <div class="displaySmall" style="margin-left: -13px;">S</div>
+            <div style="display: inline-block; height: 16px; width: 16px;" data-args="sold" id="legendSold"></div>
+            <div class="displaySmall" style="margin-left: -13px; color:darkgray;">S</div>
             <div class="displayBig" style="margin-left: 8px;">
               <span>Sold</span>
             </div>
           </div>
 
           <div style="display:flex;align-items:center;">
-            <div style="display: inline-block; height: 16px; width: 16px; background: yellow;"></div>
-            <div class="displaySmall" style="margin-left: -13px;">R</div>
+            <div style="display: inline-block; height: 16px; width: 16px;" data-args="reserved" id="legendReserved"></div>
+            <div class="displaySmall" style="margin-left: -13px; color:darkgray;">R</div>
             <div class="displayBig" style="margin-left: 8px;">
               <span>Reserved</span>
             </div>
           </div>
 
           <div style="display:flex;align-items:center;">
-            <div style="display: inline-block; height: 16px; width: 16px; background: orange;"></div>
-            <div class="displaySmall" style="margin-left: -13px;">H</div>
+            <div style="display: inline-block; height: 16px; width: 16px;" data-args="hold" id="legendHold"></div>
+            <div class="displaySmall" style="margin-left: -13px; color:darkgray;">H</div>
             <div class="displayBig" style="margin-left: 8px;">
               <span>Hold</span>
             </div>
           </div>
 
           <div style="display:flex;align-items:center;">
-            <div style="display: inline-block; height: 16px; width: 16px; background: gray;"></div>
-            <div class="displaySmall" style="margin-left: -13px;">N</div>
+            <div style="display: inline-block; height: 16px; width: 16px;" data-args="notyetavailable" id="legendNotyetavailable"></div>
+            <div class="displaySmall" style="margin-left: -13px; color:darkgray;">N</div>
             <div class="displayBig" style="margin-left: 8px;">
               <span>Not yet available</span>
             </div>
@@ -266,22 +282,71 @@
           type: Object
         },
         lots: {
-          type: Object
+          type: Object,
+          observer: '_lotsLoaded'
         },
         viewMap: {
           type: Boolean,
           value: false
+        },
+        statuscolor: {
+          type: Object,
+          observer: '_statusColorChanged'
+        }
+
+      },
+
+      _statusColorChanged() {
+        if (this.statuscolor) {
+          var argsAvailable = Polymer.dom(this.root).querySelector("#legendAvailable")
+          if (argsAvailable) {
+            argsAvailable.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._computeVariableName(argsAvailable.getAttribute("data-args")) + ";");
+          }
+
+          var argsSold = Polymer.dom(this.root).querySelector("#legendSold")
+          if (argsSold) {
+            argsSold.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._computeVariableName(argsSold.getAttribute("data-args")) + ";");
+          }
+
+          var argsReserved = Polymer.dom(this.root).querySelector("#legendReserved")
+          if (argsReserved) {
+            argsReserved.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._computeVariableName(argsReserved.getAttribute("data-args")) + ";");
+          }     
+
+          var argsHold = Polymer.dom(this.root).querySelector("#legendHold")
+          if (argsHold) {
+            argsHold.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._computeVariableName(argsHold.getAttribute("data-args")) + ";");
+          }      
+
+          var argsNotyetavailable = Polymer.dom(this.root).querySelector("#legendNotyetavailable")
+          if (argsNotyetavailable) {
+            argsNotyetavailable.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._computeVariableName(argsNotyetavailable.getAttribute("data-args")) + ";");
+          }                        
+
+        }
+
+      },
+
+      _computeVariableName(e) {
+        if (e) {
+          if (e) {
+            if (this.statuscolor) {
+              return (this.statuscolor[e]).color;
+            }
+          }
         }
 
       },
 
       polyClicked(e) {
         var data_args = Polymer.dom(e).rootTarget.getAttribute("id");
-        var args = Polymer.dom(this.root).querySelector("#rightdrawer")
+        // var args = Polymer.dom(this.root).querySelector("#rightdrawer")
 
-        args.setAttribute("style", "display: block;");
-        args.setAttribute("uid", data_args);
+        // args.setAttribute("style", "display: block;");
+        // args.setAttribute("uid", data_args);
 
+
+        console.log(data_args);
 
         // Polymer.dom(this.root).querySelector("#my-map-main-adl").setAttribute("style", "width: calc(100% - 340px);");
 
@@ -319,6 +384,14 @@
 
       _refreshMap() {
         window.location.reload()
+      },
+
+      _lotsLoaded() {
+        if (this.lots.length > 0) {
+          var toast = Polymer.dom(this.root).querySelector("#toast")
+          toast.close();
+        }
+
       }
 
 
