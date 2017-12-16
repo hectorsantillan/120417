@@ -87,10 +87,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <firebase-app auth-domain="hpmg-56df3.firebaseapp.com" database-url="https://hpmg-56df3.firebaseio.com/" api-key="AIzaSyCKxkkMfRQlhG5vTWh8Y_1yNWtMCTa-YPM">
     </firebase-app>
 
-    <firebase-auth id="auth" user="{{user}}" provider="google" on-error="showError"></firebase-auth>
-    <!-- <div>Test</div> -->
+    <firebase-auth id="auth" status-known="{{statusKnown}}" user="{{user}}" provider="google" on-error="showError"></firebase-auth>
 
-    <template is="dom-if" if="{{_needToSignIn(userStore)}}">
+    <template is="dom-if" if="{{_needToSignIn(user,statusKnown)}}">
       <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="view404" role="main">
         <my-landing-page name="landing-page" user="{{user}}"></my-landing-page>
         <my-signin name="signin"></my-signin>
@@ -99,10 +98,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       </iron-pages>
     </template>
 
-    <template is="dom-if" if="{{_alreadySignedIn(userStore)}}">
+    <template is="dom-if" if="{{_alreadySignedIn(user,statusKnown)}}">
 
-      <app-location route="{{route}}" url-space-regex="^[[rootPath]]"></app-location>
-      <app-route route="{{route}}" pattern="[[rootPath]]:page" data="{{routeData}}" tail="{{subroute}}"></app-route>
+      <!-- <app-location route="{{route}}" url-space-regex="^[[rootPath]]"></app-location>
+      <app-route route="{{route}}" pattern="[[rootPath]]:page" data="{{routeData}}" tail="{{subroute}}"></app-route> -->
 
       <app-drawer-layout fullbleed narrow="{{narrow}}" id="drawerLayout">
         <app-drawer id="drawer" slot="drawer" swipe-open="[[narrow]]">
@@ -162,11 +161,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           // This shouldn't be neccessary, but the Analyzer isn't picking up
           // Polymer.Element#rootPath
           rootPath: String,
-          userStore: {
-            type: String, // will be changed to Object once iron-data is in place
-            value: null, // will be removed later, when iron-data checking on local database is added
-            notify: true
-          },
           headerSearchBarIsHidden: {
             type: Boolean,
             value: true
@@ -192,7 +186,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           window.addEventListener('offline', (e) => this._notifyNetworkStatus(e));
         });
 
-        this.addEventListener('statusKnown', (e) => this._changeChannel(e));
+
       }
 
       _routePageChanged(page) {
@@ -220,14 +214,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.page = 'view404';
       }
 
-      _needToSignIn(e) {
-        // still to consider undefined & etc.
-        return e === null;
+      _needToSignIn(e,f) {
+        if(f === true) {
+          return e === null;
+        }
+        else {
+          return false;
+        }
       }
 
-      _alreadySignedIn(e) {
-        // still to consider undefined & etc.
-        return e !== null;
+      _alreadySignedIn(e,f) {
+        if(f === true) {
+          return e !== null;
+        }
+        else {
+          return false;
+        }        
       }
 
       _notifyNetworkStatus() {
@@ -265,10 +267,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.$.auth.signOut();
       }
 
-      _changeChannel() {
-        this.userStore = this.user;
-        console.log(this.user)
-      }
 
 
     }

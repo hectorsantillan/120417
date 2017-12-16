@@ -117,21 +117,6 @@
             is: 'my-signin',
 
             _signIn() {
-                var actionCodeSettings = {
-                    url: 'https://www.example.com/cart?email=user@example.com&cartId=123',
-                    iOS: {
-                        bundleId: 'com.example.ios'
-                    },
-                    android: {
-                        packageName: 'com.example.android',
-                        installApp: true,
-                        minimumVersion: '12'
-                    },
-                    handleCodeInApp: true
-                };
-
-
-
                 this.$.auth.signInWithEmailAndPassword('hbs.auss@gmail.com', '123456');
                 // this.$.auth.sendEmailVerification(actionCodeSettings);
                 if (this.user) {
@@ -142,7 +127,7 @@
                 
                 // console.log(this.user);
                 
-
+                
                
             }
         })

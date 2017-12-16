@@ -168,15 +168,13 @@
           </template>
 
 
-          <firebase-query id="query" path="/lots" data="{{lots}}">
+          <firebase-query id="query" path="/lots" data="{{lots}}"> 
           </firebase-query>
-
-          <firebase-document path="/statuscolor" data="{{statuscolor}}">
-          </firebase-document>
+          <!-- order-by-child="status" equal-to="{{imhold}}" -->
 
           <template is="dom-repeat" items="{{lots}}" as='lot'>
 
-            <google-map-poly closed stroke-color="white" stroke-position="inside" stroke-opacity="1" stroke-weight="1" fill-color="{{_computeVariableName(lot.status)}}"
+            <google-map-poly closed stroke-color="white" stroke-position="inside" stroke-opacity="1" stroke-weight="1" fill-color="{{_getStatusColor(lot.status)}}"
               fill-opacity="1" clickable="true" click-events="true" on-google-map-poly-click="polyClicked" mouse-events="true"
               on-google-map-poly-mouseover="polyMouseOver" on-google-map-poly-mouseout="polyMouseOut" id="{{lot.$key}}">
 
@@ -206,7 +204,7 @@
 
           <div style="display:flex;align-items:center;">
             <div style="display: inline-block; height: 16px; width: 16px;" data-args="available" id="legendAvailable"></div>
-            <div class="displaySmall" style="margin-left: -13px; color:darkgray;">A</div>
+            <div class="displaySmall" style="margin-left: -13px;">A</div>
             <div class="displayBig" style="margin-left: 8px;">
               <span>Available</span>
             </div>
@@ -214,7 +212,7 @@
 
           <div style="display:flex;align-items:center;">
             <div style="display: inline-block; height: 16px; width: 16px;" data-args="sold" id="legendSold"></div>
-            <div class="displaySmall" style="margin-left: -13px; color:darkgray;">S</div>
+            <div class="displaySmall" style="margin-left: -13px;">S</div>
             <div class="displayBig" style="margin-left: 8px;">
               <span>Sold</span>
             </div>
@@ -222,7 +220,7 @@
 
           <div style="display:flex;align-items:center;">
             <div style="display: inline-block; height: 16px; width: 16px;" data-args="reserved" id="legendReserved"></div>
-            <div class="displaySmall" style="margin-left: -13px; color:darkgray;">R</div>
+            <div class="displaySmall" style="margin-left: -13px;">R</div>
             <div class="displayBig" style="margin-left: 8px;">
               <span>Reserved</span>
             </div>
@@ -230,7 +228,7 @@
 
           <div style="display:flex;align-items:center;">
             <div style="display: inline-block; height: 16px; width: 16px;" data-args="hold" id="legendHold"></div>
-            <div class="displaySmall" style="margin-left: -13px; color:darkgray;">H</div>
+            <div class="displaySmall" style="margin-left: -13px;">H</div>
             <div class="displayBig" style="margin-left: 8px;">
               <span>Hold</span>
             </div>
@@ -238,7 +236,7 @@
 
           <div style="display:flex;align-items:center;">
             <div style="display: inline-block; height: 16px; width: 16px;" data-args="notyetavailable" id="legendNotyetavailable"></div>
-            <div class="displaySmall" style="margin-left: -13px; color:darkgray;">N</div>
+            <div class="displaySmall" style="margin-left: -13px;">N</div>
             <div class="displayBig" style="margin-left: 8px;">
               <span>Not yet available</span>
             </div>
@@ -292,7 +290,11 @@
         statuscolor: {
           type: Object,
           observer: '_statusColorChanged'
-        }
+        },
+        // imhold: {
+        //   type: String,
+        //   value: "reserved"
+        // }
 
       },
 
@@ -300,40 +302,49 @@
         if (this.statuscolor) {
           var argsAvailable = Polymer.dom(this.root).querySelector("#legendAvailable")
           if (argsAvailable) {
-            argsAvailable.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._computeVariableName(argsAvailable.getAttribute("data-args")) + ";");
+            argsAvailable.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._getStatusColor(argsAvailable.getAttribute("data-args")) + ";");
           }
 
           var argsSold = Polymer.dom(this.root).querySelector("#legendSold")
           if (argsSold) {
-            argsSold.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._computeVariableName(argsSold.getAttribute("data-args")) + ";");
+            argsSold.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._getStatusColor(argsSold.getAttribute("data-args")) + ";");
           }
 
           var argsReserved = Polymer.dom(this.root).querySelector("#legendReserved")
           if (argsReserved) {
-            argsReserved.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._computeVariableName(argsReserved.getAttribute("data-args")) + ";");
+            argsReserved.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._getStatusColor(argsReserved.getAttribute("data-args")) + ";");
           }     
 
           var argsHold = Polymer.dom(this.root).querySelector("#legendHold")
           if (argsHold) {
-            argsHold.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._computeVariableName(argsHold.getAttribute("data-args")) + ";");
+            argsHold.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._getStatusColor(argsHold.getAttribute("data-args")) + ";");
           }      
 
           var argsNotyetavailable = Polymer.dom(this.root).querySelector("#legendNotyetavailable")
           if (argsNotyetavailable) {
-            argsNotyetavailable.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._computeVariableName(argsNotyetavailable.getAttribute("data-args")) + ";");
+            argsNotyetavailable.setAttribute("style", "display: inline-block; height: 16px; width: 16px; background: " + this._getStatusColor(argsNotyetavailable.getAttribute("data-args")) + ";");
           }                        
 
         }
 
       },
 
-      _computeVariableName(e) {
+      _getStatusColor(e) {
         if (e) {
           if (e) {
             if (this.statuscolor) {
               return (this.statuscolor[e]).color;
             }
+            else {
+              return "gray";
+            }
           }
+          else {
+            return "gray";
+          }
+        }
+        else {
+          return "gray";
         }
 
       },
